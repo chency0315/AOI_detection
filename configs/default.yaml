@@ -1,0 +1,15 @@
+# Default AOI inspection configuration.
+input_size: [512, 512]
+grayscale: false
+
+detector:
+  name: threshold
+  # Pixel-intensity deviation from the local median that counts as a defect.
+  sensitivity: 0.25
+  # Connected components smaller than this (in pixels) are treated as noise.
+  min_defect_area: 24
+
+report:
+  # An image fails inspection once this many defects are found.
+  max_defects: 0
+  save_overlays: true
