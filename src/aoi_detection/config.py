@@ -47,3 +47,89 @@ def load_config(path: str | Path) -> Config:
     if not isinstance(raw, dict):
         raise ValueError(f"{path}: expected a YAML mapping at the top level")
     return Config.from_dict(raw)
+
+
+# --- Training -------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class AugmentationConfig:
+    """ImageDataGenerator arguments used for the training split only."""
+
+    rotation_range: float = 20.0
+    horizontal_flip: bool = True
+    vertical_flip: bool = False
+    zoom_range: float = 0.1
+    brightness_range: tuple[float, float] = (0.9, 1.1)
+    shear_range: float = 0.1
+    width_shift_range: float = 0.1
+    height_shift_range: float = 0.1
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> AugmentationConfig:
+        raw = dict(raw)
+        if "brightness_range" in raw:
+            lo, hi = raw["brightness_range"]
+            raw["brightness_range"] = (float(lo), float(hi))
+        return cls(**raw)
+
+
+@dataclass(frozen=True)
+class TrainConfig:
+    """Settings for training and evaluating the MobileNetV2 classifier."""
+
+    data_dir: Path = Path("data/raw")
+    train_csv: str = "train.csv"
+    train_images: str = "train_images"
+    test_csv: str = "test.csv"
+    test_images: str = "test_images"
+    output_dir: Path = Path("runs")
+
+    image_size: tuple[int, int] = (224, 224)
+    batch_size: int = 25
+    epochs: int = 30
+    learning_rate: float = 1e-4
+    dropout: float = 0.5
+    valid_split: float = 0.2
+    seed: int = 666
+    use_class_weights: bool = True
+    # 0 disables early stopping (the notebook trained a fixed 30 epochs).
+    early_stopping_patience: int = 0
+    augmentation: AugmentationConfig = field(default_factory=AugmentationConfig)
+
+    @property
+    def train_csv_path(self) -> Path:
+        return self.data_dir / self.train_csv
+
+    @property
+    def train_images_dir(self) -> Path:
+        return self.data_dir / self.train_images
+
+    @property
+    def test_csv_path(self) -> Path:
+        return self.data_dir / self.test_csv
+
+    @property
+    def test_images_dir(self) -> Path:
+        return self.data_dir / self.test_images
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> TrainConfig:
+        raw = dict(raw)
+        for key in ("data_dir", "output_dir"):
+            if key in raw:
+                raw[key] = Path(raw[key])
+        if "image_size" in raw:
+            size = raw["image_size"]
+            raw["image_size"] = (int(size[0]), int(size[1]))
+        raw["augmentation"] = AugmentationConfig.from_dict(raw.get("augmentation", {}))
+        return cls(**raw)
+
+
+def load_train_config(path: str | Path) -> TrainConfig:
+    """Read a YAML training config file into a `TrainConfig`."""
+    with open(path, encoding="utf-8") as fh:
+        raw = yaml.safe_load(fh) or {}
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path}: expected a YAML mapping at the top level")
+    return TrainConfig.from_dict(raw)
