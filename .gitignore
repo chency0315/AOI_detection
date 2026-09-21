@@ -36,6 +36,7 @@ data/processed/*
 *.onnx
 *.h5
 *.tflite
+*.keras
 
 # Run artifacts
 runs/

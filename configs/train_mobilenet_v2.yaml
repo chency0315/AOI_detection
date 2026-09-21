@@ -1,0 +1,29 @@
+# MobileNetV2 defect-classification training config.
+# Mirrors the Colab notebook hyper-parameters.
+
+data_dir: data/raw
+train_csv: train.csv          # columns: ID, Label (0-5)
+train_images: train_images
+test_csv: test.csv
+test_images: test_images
+output_dir: runs
+
+image_size: [224, 224]
+batch_size: 25
+epochs: 30
+learning_rate: 0.0001
+dropout: 0.5
+valid_split: 0.2              # 8:2 train/valid split
+seed: 666
+use_class_weights: true       # sklearn "balanced" weights for the imbalanced classes
+early_stopping_patience: 0    # 0 = disabled, as in the notebook
+
+augmentation:
+  rotation_range: 20
+  horizontal_flip: true
+  vertical_flip: false
+  zoom_range: 0.1
+  brightness_range: [0.9, 1.1]
+  shear_range: 0.1
+  width_shift_range: 0.1
+  height_shift_range: 0.1
