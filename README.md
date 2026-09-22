@@ -1,5 +1,7 @@
 # AOI_detection
 
+English | [繁體中文](README.zh-TW.md)
+
 AOI detection using a CNN deep learning model.
 
 Automated Optical Inspection (AOI) — finding surface and assembly defects in
