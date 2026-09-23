@@ -122,6 +122,33 @@ precision/recall report in the log. `--show` opens the confusion matrix.
 `notebooks/train_mobilenet_v2_walkthrough.ipynb` runs the same steps with the
 plots inline. The original Colab notebook is kept unchanged.
 
+### Trading overkill for escapes
+
+Two mistakes cost differently on an inspection line: an **escape** (a defective
+part passed as good) usually costs far more than **overkill** (a good part
+rejected). A plain `argmax` treats them the same.
+
+`normal_confidence_threshold` makes the decision one-sided — passing an image
+needs confidence, rejecting one does not:
+
+```yaml
+normal_confidence_threshold: 0.8   # 0 disables the rule
+```
+
+```bash
+python scripts/evaluate.py --normal-threshold 0.8
+```
+
+When `normal` wins with a probability below the threshold, the image is
+re-labelled with its strongest defect class instead. On the 224px run this
+moved accuracy 95.3% -> 96.0%, escapes 5 -> 4, overkill 0 -> 0.
+
+**Pick the value on the validation split, not on the test set.** Sweeping
+thresholds against test and then reporting that test number makes the score
+optimistic. The rule also cannot fix confident errors: on this model 4 of the 5
+escapes sat at P(normal) > 0.97, inside the range of genuinely normal images,
+so no threshold separates them - those need more data of that defect sub-type.
+
 ### Differences from the Colab notebook
 
 - Checkpoints use the native `.keras` format instead of legacy `.h5`.

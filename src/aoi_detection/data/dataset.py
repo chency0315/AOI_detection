@@ -22,6 +22,8 @@ CLASS_NAMES: tuple[str, ...] = (
     "particle",
 )
 NUM_CLASSES = len(CLASS_NAMES)
+# Index of the "pass" class. Every other class is a defect of some kind.
+NORMAL_CLASS = 0
 
 ID_COL = "ID"
 LABEL_COL = "Label"

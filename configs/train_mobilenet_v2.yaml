@@ -18,6 +18,11 @@ seed: 666
 use_class_weights: true       # sklearn "balanced" weights for the imbalanced classes
 early_stopping_patience: 0    # 0 = disabled, as in the notebook
 
+# Minimum P(normal) required to pass an image at evaluation time. Below it the
+# image is re-labelled with its strongest defect class: fewer escapes, more
+# overkill. 0 disables. Pick it on the validation split, not on test.
+normal_confidence_threshold: 0.0
+
 augmentation:
   rotation_range: 20
   horizontal_flip: true
