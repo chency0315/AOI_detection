@@ -1,4 +1,4 @@
-# AOI_detection
+# AOI瑕疵檢測
 
 [English](README.md) | 繁體中文
 
@@ -179,3 +179,8 @@ pytest --cov=aoi_detection
 閾值基準偵測器可完整運作並有測試覆蓋。MobileNetV2 分類器可透過
 `scripts/train.py` / `scripts/evaluate.py` 訓練與評估；將它接入檢測 CLI 的
 `Detector` 介面仍待完成。
+
+## 專案成果
+
+<img width="1673" height="998" alt="aoi_detection_final" src="https://github.com/user-attachments/assets/6f90ed2c-1378-460b-a223-cef7c55cc4b9" />
+
