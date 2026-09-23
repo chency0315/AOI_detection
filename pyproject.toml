@@ -7,15 +7,24 @@ name = "aoi-detection"
 version = "0.1.0"
 description = "Automated Optical Inspection defect detection pipeline"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
-    "numpy>=1.26",
-    "opencv-python-headless>=4.9",
+    "numpy>=1.26,<2",
+    "opencv-python-headless>=4.9,<4.11",
     "pillow>=10.2",
     "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
+# MobileNetV2 training / evaluation stack (CPU TensorFlow; Keras 2 API).
+train = [
+    "tensorflow>=2.13,<2.16",
+    "pandas>=1.5",
+    "scikit-learn>=1.0",
+    "scipy>=1.9",
+    "matplotlib>=3.7",
+    "seaborn>=0.12",
+]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
@@ -41,7 +50,7 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.9"
 packages = ["aoi_detection"]
 mypy_path = "src"
 strict = true
