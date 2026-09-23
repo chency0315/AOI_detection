@@ -183,3 +183,8 @@ pytest --cov=aoi_detection
 The threshold baseline works end to end and is covered by tests. The MobileNetV2
 classifier trains and evaluates via `scripts/train.py` / `scripts/evaluate.py`;
 wiring it into the `Detector` interface for the inspection CLI is still open.
+
+## results
+
+<img width="1673" height="998" alt="aoi_detection_final" src="https://github.com/user-attachments/assets/eef45267-7196-4cdd-85b2-a5579c4090b8" />
+
