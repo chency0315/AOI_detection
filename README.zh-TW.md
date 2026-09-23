@@ -1,4 +1,4 @@
-# AOI瑕疵檢測
+# AOI瑕疵檢測分類
 
 [English](README.md) | 繁體中文
 
