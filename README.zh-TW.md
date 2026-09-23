@@ -122,6 +122,29 @@ python scripts/evaluate.py
 `notebooks/train_mobilenet_v2_walkthrough.ipynb` 以同樣的步驟執行並直接在
 notebook 內顯示圖表。原始的 Colab notebook 保持不變。
 
+### 用過殺換漏檢
+
+產線上兩種錯誤成本不同：**漏檢**（不良品被判成良品）通常遠比**過殺**（良品被
+誤判成不良品）昂貴。單純的 `argmax` 把兩者一視同仁。
+
+`normal_confidence_threshold` 讓判定變成不對稱 — 要放行需要信心，要攔下不用：
+
+```yaml
+normal_confidence_threshold: 0.8   # 0 表示停用
+```
+
+```bash
+python scripts/evaluate.py --normal-threshold 0.8
+```
+
+當 `normal` 勝出但機率低於門檻時，該影像會改判成機率最高的瑕疵類。在 224px
+的訓練結果上，這讓準確率 95.3% → 96.0%、漏檢 5 → 4、過殺 0 → 0。
+
+**門檻要用 validation set 挑，不要用 test set。** 在 test 上掃門檻再回報那個
+test 分數，會讓成績偏樂觀。這條規則也救不了「有信心的錯誤」：這個模型 5 件漏檢
+裡有 4 件的 P(normal) > 0.97，落在真正良品的範圍內，沒有任何門檻分得開 —
+那種情況需要補該瑕疵子型態的資料。
+
 ### 與 Colab notebook 的差異
 
 - Checkpoint 改用原生 `.keras` 格式，而非舊版 `.h5`。

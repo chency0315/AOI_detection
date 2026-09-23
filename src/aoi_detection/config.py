@@ -93,6 +93,11 @@ class TrainConfig:
     valid_split: float = 0.2
     seed: int = 666
     use_class_weights: bool = True
+    # Minimum softmax confidence required to accept a "normal" prediction at
+    # evaluation time. Below it the image is re-labelled with its strongest
+    # defect class, trading overkill for fewer escapes. 0 disables the rule.
+    # Tune it on the validation split, never on the test set.
+    normal_confidence_threshold: float = 0.0
     # 0 disables early stopping (the notebook trained a fixed 30 epochs).
     early_stopping_patience: int = 0
     augmentation: AugmentationConfig = field(default_factory=AugmentationConfig)

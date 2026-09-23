@@ -69,3 +69,36 @@ def test_class_weights_favour_rare_classes(labels):
     assert weights[0] == pytest.approx(100 / (6 * 30))
     assert weights[2] > weights[0]
     assert np.isclose(sum(w * c for w, c in zip(weights.values(), class_counts(labels))), 100)
+
+
+def test_normal_threshold_is_one_sided():
+    from aoi_detection.training.evaluate import apply_normal_threshold
+
+    probs = np.array(
+        [
+            [0.73, 0.02, 0.00, 0.25, 0.00, 0.00],  # unsure normal -> vertical_defect
+            [0.95, 0.03, 0.00, 0.02, 0.00, 0.00],  # confident normal -> stays normal
+            [0.30, 0.10, 0.05, 0.05, 0.10, 0.40],  # defect win is never overridden
+        ]
+    )
+    assert list(apply_normal_threshold(probs, 0.0)) == [0, 0, 5]  # plain argmax
+    assert list(apply_normal_threshold(probs, 0.8)) == [3, 0, 5]
+
+
+def test_normal_threshold_never_picks_normal_as_runner_up():
+    from aoi_detection.data.dataset import NORMAL_CLASS
+    from aoi_detection.training.evaluate import apply_normal_threshold
+
+    # normal wins but is under threshold; the runner-up must be a defect class.
+    probs = np.array([[0.5, 0.4, 0.04, 0.03, 0.02, 0.01]])
+    assert apply_normal_threshold(probs, 0.9)[0] != NORMAL_CLASS
+    assert apply_normal_threshold(probs, 0.9)[0] == 1
+
+
+def test_normal_threshold_leaves_input_probs_untouched():
+    from aoi_detection.training.evaluate import apply_normal_threshold
+
+    probs = np.array([[0.6, 0.4, 0.0, 0.0, 0.0, 0.0]])
+    before = probs.copy()
+    apply_normal_threshold(probs, 0.8)
+    assert np.array_equal(probs, before)

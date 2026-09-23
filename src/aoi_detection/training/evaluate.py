@@ -11,7 +11,14 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report
 
 from aoi_detection.config import TrainConfig
-from aoi_detection.data.dataset import CLASS_NAMES, ID_COL, LABEL_COL, has_labels, load_labels
+from aoi_detection.data.dataset import (
+    CLASS_NAMES,
+    ID_COL,
+    LABEL_COL,
+    NORMAL_CLASS,
+    has_labels,
+    load_labels,
+)
 from aoi_detection.data.generators import make_predict_generator, steps_per_epoch
 from aoi_detection.models.mobilenet_v2 import load_model
 from aoi_detection.utils.logging import get_logger
@@ -30,6 +37,8 @@ class EvalResult:
     accuracy: float | None
     confusion: np.ndarray | None
     report: str | None
+    overridden: int = 0
+    """How many predictions the normal-confidence rule flipped to a defect."""
 
 
 def latest_run_dir(output_dir: str | Path) -> Path:
@@ -54,6 +63,27 @@ def predict_dataframe(
     return np.asarray(probs)
 
 
+def apply_normal_threshold(probs: np.ndarray, threshold: float) -> np.ndarray:
+    """Argmax, except a `normal` win below `threshold` becomes a defect call.
+
+    The rule is deliberately one-sided: passing an image needs confidence,
+    rejecting one does not. That trades overkill (good parts rejected) for
+    fewer escapes (defective parts passed), which is the cheaper mistake on
+    most inspection lines. `threshold <= 0` is a plain argmax.
+    """
+    y_pred = probs.argmax(axis=-1)
+    if threshold <= 0:
+        return y_pred
+
+    unsure = (y_pred == NORMAL_CLASS) & (probs[:, NORMAL_CLASS] < threshold)
+    if unsure.any():
+        defects = np.delete(probs[unsure], NORMAL_CLASS, axis=1)
+        best = defects.argmax(axis=-1)
+        # Undo the column deletion: indices at or above NORMAL_CLASS shift by one.
+        y_pred[unsure] = np.where(best >= NORMAL_CLASS, best + 1, best)
+    return y_pred
+
+
 def evaluate(cfg: TrainConfig, run_dir: str | Path, show: bool = False) -> EvalResult:
     """Run inference over `test.csv` and write results next to the model.
 
@@ -70,7 +100,15 @@ def evaluate(cfg: TrainConfig, run_dir: str | Path, show: bool = False) -> EvalR
     probs = predict_dataframe(
         model_path, test_df, cfg.test_images_dir, cfg.image_size, cfg.batch_size
     )
-    y_pred = probs.argmax(axis=-1)
+    threshold = cfg.normal_confidence_threshold
+    y_pred = apply_normal_threshold(probs, threshold)
+    overridden = int((probs.argmax(axis=-1) != y_pred).sum())
+    if threshold > 0:
+        log.info(
+            "normal-confidence rule at %.2f: %d image(s) re-labelled as defective",
+            threshold,
+            overridden,
+        )
 
     predictions = pd.DataFrame({ID_COL: test_df[ID_COL].to_numpy(), LABEL_COL: y_pred})
     submission_path = run_dir / "submission.csv"
@@ -109,4 +147,5 @@ def evaluate(cfg: TrainConfig, run_dir: str | Path, show: bool = False) -> EvalR
         accuracy=accuracy,
         confusion=confusion,
         report=report,
+        overridden=overridden,
     )
