@@ -1,4 +1,4 @@
-# AOI_detection
+# AOI defects detection
 
 English | [繁體中文](README.zh-TW.md)
 
